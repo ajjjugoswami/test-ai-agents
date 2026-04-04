@@ -3,7 +3,7 @@ import { sendCommand, getLatestResult, getStatus } from './api';
 import {
   Home, Bot, FolderOpen, ScrollText, Camera, Lock, Globe, Monitor,
   MessageSquare, Music, VolumeX, Activity, Send, Play, ChevronRight,
-  Wifi, WifiOff, Loader2, Terminal, ArrowUp, Power,
+  Wifi, WifiOff, Loader2, Terminal, ArrowUp, Power, Image,
   FolderClosed, FileText, Search, Cpu, HardDrive
 } from 'lucide-react';
 
@@ -13,9 +13,15 @@ export default function App() {
   const [folderPath, setFolderPath] = useState('C:\\');
   const [result, setResult] = useState(null);
   const [log, setLog] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const lastResultId = useRef(null);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -26,7 +32,13 @@ export default function App() {
         if (r && r.commandId !== lastResultId.current) {
           lastResultId.current = r.commandId;
           setResult(r);
-          setLog(prev => [...prev, { id: r.commandId, output: r.output, time: new Date(r.receivedAt).toLocaleTimeString(), hasScreenshot: !!r.screenshot }]);
+          setLog(prev => [...prev, { id: r.commandId, output: r.output, time: new Date(r.receivedAt).toLocaleTimeString(), hasScreenshot: !!r.screenshot, screenshot: r.screenshot }]);
+          setMessages(prev => [...prev, {
+            role: 'bot',
+            text: r.output,
+            screenshot: r.screenshot || null,
+            time: new Date(r.receivedAt).toLocaleTimeString(),
+          }]);
           setLoading(false);
         }
       } catch {}
@@ -36,6 +48,12 @@ export default function App() {
 
   const send = async (type, payload) => {
     setLoading(true);
+    const label = type === 'screenshot' ? 'Take Screenshot'
+      : type === 'lock' ? 'Lock PC'
+      : type === 'list_files' ? `List files in ${payload}`
+      : type === 'open_app' ? `Open ${payload}`
+      : payload || type;
+    setMessages(prev => [...prev, { role: 'user', text: label, time: new Date().toLocaleTimeString() }]);
     await sendCommand(type, payload);
   };
 
@@ -81,9 +99,9 @@ export default function App() {
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-[72px]">
 
+        {/* HOME TAB */}
         {activeTab === 'home' && (
           <div className="px-5 py-4 space-y-5">
-            {/* Command bar */}
             <form onSubmit={handleSubmit} className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 h-11">
               <Terminal size={15} className="text-zinc-500 shrink-0" />
               <input
@@ -97,7 +115,6 @@ export default function App() {
               </button>
             </form>
 
-            {/* Quick actions */}
             <section>
               <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">Quick Actions</p>
               <div className="grid grid-cols-4 gap-3">
@@ -111,11 +128,7 @@ export default function App() {
                   { icon: VolumeX, label: 'Mute', bg: 'bg-zinc-500/10', iconColor: 'text-zinc-400', action: () => send('shell', 'powershell -c "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"') },
                   { icon: Activity, label: 'Tasks', bg: 'bg-orange-500/10', iconColor: 'text-orange-400', action: () => send('shell', 'start taskmgr') },
                 ].map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={item.action}
-                    className="flex flex-col items-center gap-2 py-3 rounded-xl active:scale-95 transition-transform"
-                  >
+                  <button key={i} onClick={item.action} className="flex flex-col items-center gap-2 py-3 rounded-xl active:scale-95 transition-transform">
                     <div className={`w-11 h-11 rounded-2xl ${item.bg} flex items-center justify-center`}>
                       <item.icon size={20} className={item.iconColor} />
                     </div>
@@ -125,7 +138,6 @@ export default function App() {
               </div>
             </section>
 
-            {/* System shortcuts */}
             <section>
               <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">System</p>
               <div className="space-y-1.5">
@@ -135,11 +147,7 @@ export default function App() {
                   { icon: Wifi, label: 'Network', desc: 'Show IP configuration', action: () => send('shell', 'ipconfig') },
                   { icon: Power, label: 'Shutdown (60s)', desc: 'Shutdown with 60s delay', action: () => send('shell', 'shutdown /s /t 60') },
                 ].map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={item.action}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800/50 active:scale-[0.98] transition-all text-left"
-                  >
+                  <button key={i} onClick={item.action} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800/50 active:scale-[0.98] transition-all text-left">
                     <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
                       <item.icon size={16} className="text-zinc-400" />
                     </div>
@@ -152,97 +160,120 @@ export default function App() {
                 ))}
               </div>
             </section>
-
-            {/* Screenshot */}
-            {result?.screenshot && (
-              <section>
-                <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">Screenshot</p>
-                <div className="rounded-2xl overflow-hidden border border-zinc-800">
-                  <img src={`data:image/png;base64,${result.screenshot}`} alt="Screenshot" className="w-full" />
-                </div>
-              </section>
-            )}
-
-            {/* Result */}
-            {result?.output && !result?.screenshot && !Array.isArray(tryParse(result.output)) && (
-              <section>
-                <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">Output</p>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
-                  <pre className="text-[12px] text-zinc-300 whitespace-pre-wrap font-mono leading-5 max-h-48 overflow-y-auto">{result.output}</pre>
-                </div>
-              </section>
-            )}
           </div>
         )}
 
-        {/* AI TAB */}
+        {/* AI TAB — Real Chat */}
         {activeTab === 'ai' && (
-          <div className="px-5 py-4 space-y-5">
-            <div className="text-center pt-2 pb-4">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700/50 mb-3">
-                <Bot size={26} className="text-zinc-300" />
-              </div>
-              <p className="text-[15px] font-semibold">AI Assistant</p>
-              <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed max-w-[260px] mx-auto">
-                Tell me what to do on your PC or ask me anything
-              </p>
-            </div>
-
-            <form onSubmit={(e) => handleSubmit(e, 'ai')}>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden focus-within:border-zinc-700 transition-colors">
-                <textarea
-                  value={cmd}
-                  onChange={e => setCmd(e.target.value)}
-                  placeholder="e.g. Open YouTube and search for lofi music..."
-                  rows={3}
-                  className="w-full bg-transparent px-4 pt-3 pb-1 text-[13px] outline-none placeholder:text-zinc-600 resize-none"
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e, 'ai'); } }}
-                />
-                <div className="flex items-center justify-between px-3 pb-2">
-                  <div />
-                  <button type="submit" className="flex items-center gap-1.5 bg-white text-black px-3.5 py-1.5 rounded-lg text-[12px] font-semibold hover:bg-zinc-200 active:scale-95 transition-all">
-                    <Send size={12} />
-                    Send
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            {/* Chips */}
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { icon: Camera, text: 'Take screenshot' },
-                { icon: Globe, text: 'Open Chrome' },
-                { icon: Search, text: 'Search Google' },
-                { icon: Lock, text: 'Lock PC' },
-                { icon: Cpu, text: 'System info' },
-                { icon: Play, text: 'Play music' },
-              ].map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => send('ai', s.text)}
-                  className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 active:scale-95 transition-all"
-                >
-                  <s.icon size={11} />
-                  {s.text}
-                </button>
-              ))}
-            </div>
-
-            {/* Response */}
-            {result?.output && !result?.screenshot && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center">
-                    <Bot size={13} className="text-zinc-400" />
+          <div className="flex flex-col" style={{ height: 'calc(100vh - 56px - 72px)' }}>
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+              {messages.length === 0 && !loading && (
+                <div className="flex flex-col items-center justify-center h-full gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                    <Bot size={26} className="text-zinc-500" />
                   </div>
-                  <span className="text-[11px] text-zinc-500 font-medium">Response</span>
+                  <p className="text-[13px] text-zinc-500 text-center max-w-[220px]">
+                    Send a message to control your PC or ask anything
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+                    {[
+                      { icon: Camera, text: 'Take screenshot' },
+                      { icon: Globe, text: 'Open Chrome' },
+                      { icon: Search, text: 'Search Google' },
+                      { icon: Lock, text: 'Lock PC' },
+                      { icon: Cpu, text: 'System info' },
+                      { icon: Play, text: 'Play music' },
+                    ].map((s, i) => (
+                      <button
+                        key={i}
+                        onClick={() => send('ai', s.text)}
+                        className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 active:scale-95 transition-all"
+                      >
+                        <s.icon size={11} />
+                        {s.text}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5">
-                  <pre className="text-[12px] text-zinc-300 whitespace-pre-wrap font-mono leading-5 max-h-72 overflow-y-auto">{result.output}</pre>
+              )}
+
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-[fadeIn_0.2s_ease]`}>
+                  <div className={`max-w-[85%] ${msg.role === 'bot' ? 'flex gap-2.5 items-start' : ''}`}>
+                    {msg.role === 'bot' && (
+                      <div className="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700/50 flex items-center justify-center shrink-0 mt-1">
+                        <Bot size={14} className="text-zinc-400" />
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <div className={`rounded-2xl ${
+                        msg.role === 'user'
+                          ? 'bg-white text-black rounded-tr-sm px-3.5 py-2.5'
+                          : 'bg-zinc-900 border border-zinc-800 rounded-tl-sm'
+                      }`}>
+                        {msg.screenshot && (
+                          <div className={`overflow-hidden ${msg.role === 'bot' ? 'rounded-t-2xl rounded-tl-sm' : 'rounded-t-2xl rounded-tr-sm'}`}>
+                            <img src={`data:image/png;base64,${msg.screenshot}`} alt="Screenshot" className="w-full block" />
+                          </div>
+                        )}
+                        <p className={`text-[13px] leading-relaxed whitespace-pre-wrap break-words ${
+                          msg.role === 'user' ? '' : 'px-3.5 py-2.5 text-zinc-300'
+                        } ${msg.screenshot && msg.role === 'bot' ? 'border-t border-zinc-800' : ''}`}>
+                          {msg.text}
+                        </p>
+                      </div>
+                      <p className={`text-[10px] text-zinc-600 px-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
+                        {msg.time}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
+
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="flex gap-2.5 items-start">
+                    <div className="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700/50 flex items-center justify-center shrink-0">
+                      <Bot size={14} className="text-zinc-400" />
+                    </div>
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3">
+                      <div className="flex gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Chat input */}
+            <div className="border-t border-zinc-800/60 bg-black px-4 py-3">
+              <form onSubmit={(e) => handleSubmit(e, 'ai')} className="flex items-end gap-2">
+                <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2.5 focus-within:border-zinc-700 transition-colors">
+                  <textarea
+                    value={cmd}
+                    onChange={e => setCmd(e.target.value)}
+                    placeholder="Message..."
+                    rows={1}
+                    className="w-full bg-transparent text-[13px] outline-none placeholder:text-zinc-600 resize-none leading-5"
+                    style={{ maxHeight: '80px' }}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e, 'ai'); } }}
+                    onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 80) + 'px'; }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!cmd.trim()}
+                  className="shrink-0 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-zinc-200 active:scale-90 transition-all disabled:opacity-30"
+                >
+                  <ArrowUp size={18} strokeWidth={2.5} />
+                </button>
+              </form>
+            </div>
           </div>
         )}
 
@@ -267,7 +298,7 @@ export default function App() {
               </button>
             </div>
 
-            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
               {['C:\\', 'C:\\Users', 'D:\\', 'C:\\Program Files', 'C:\\Windows'].map((p, i) => (
                 <button
                   key={i}
@@ -329,11 +360,16 @@ export default function App() {
                       <span className="text-[10px] text-zinc-600 font-mono">{entry.time}</span>
                       {entry.hasScreenshot && (
                         <span className="flex items-center gap-1 text-[10px] text-violet-400 bg-violet-500/10 rounded-md px-1.5 py-0.5">
-                          <Camera size={9} /> Screenshot
+                          <Image size={9} /> Screenshot
                         </span>
                       )}
                     </div>
-                    <pre className="text-[11px] text-zinc-400 whitespace-pre-wrap font-mono leading-4 max-h-28 overflow-y-auto">{entry.output}</pre>
+                    {entry.screenshot && (
+                      <div className="mb-2 rounded-lg overflow-hidden">
+                        <img src={`data:image/png;base64,${entry.screenshot}`} alt="Screenshot" className="w-full block" />
+                      </div>
+                    )}
+                    <p className="text-[11px] text-zinc-400 whitespace-pre-wrap break-words leading-4">{entry.output}</p>
                   </div>
                 ))}
               </div>
