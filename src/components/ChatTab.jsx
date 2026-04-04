@@ -194,7 +194,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
               onChange={e => setCmd(e.target.value)}
               placeholder="Message..."
               rows={1}
-              className="w-full bg-transparent text-[13px] outline-none placeholder:text-zinc-600 resize-none leading-5"
+              className="w-full bg-transparent text-[16px] outline-none placeholder:text-zinc-600 resize-none leading-5"
               style={{ maxHeight: '80px' }}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e, 'ai'); } }}
               onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 80) + 'px'; }}

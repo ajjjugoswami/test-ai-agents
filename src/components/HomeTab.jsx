@@ -19,7 +19,7 @@ export default function HomeTab({ cmd, setCmd, result, send, handleSubmit, setAc
           value={cmd}
           onChange={e => setCmd(e.target.value)}
           placeholder="Run a command..."
-          className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-zinc-600"
+          className="flex-1 bg-transparent text-[16px] outline-none placeholder:text-zinc-600"
         />
         <button type="submit" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white text-black hover:bg-zinc-200 active:scale-90 transition-all">
           <ArrowUp size={14} strokeWidth={2.5} />

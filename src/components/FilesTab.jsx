@@ -152,7 +152,7 @@ export default function FilesTab({ folderPath, setFolderPath, result, send }) {
             value={folderPath}
             onChange={e => setFolderPath(e.target.value)}
             placeholder="Enter path..."
-            className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-zinc-600"
+            className="flex-1 bg-transparent text-[16px] outline-none placeholder:text-zinc-600"
           />
         </div>
         <button
