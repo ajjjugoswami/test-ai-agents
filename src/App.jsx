@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { sendCommand, getLatestResult, getStatus } from './api';
+import {
+  Home, Bot, FolderOpen, ScrollText, Camera, Lock, Globe, Monitor,
+  MessageSquare, Music, VolumeX, Activity, Send, Play, ChevronRight,
+  Wifi, WifiOff, Loader2, Terminal, ArrowUp, Power,
+  FolderClosed, FileText, Search, Cpu, HardDrive
+} from 'lucide-react';
 
 export default function App() {
   const [status, setStatus] = useState({ online: false, lastSeen: null });
@@ -10,7 +16,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const lastResultId = useRef(null);
-  const logEndRef = useRef(null);
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -48,151 +53,194 @@ export default function App() {
     return s < 60 ? `${s}s ago` : `${Math.floor(s / 60)}m ago`;
   };
 
-  const tabs = [
-    { id: 'home', icon: '🏠', label: 'Home' },
-    { id: 'ai', icon: '🤖', label: 'AI' },
-    { id: 'files', icon: '📁', label: 'Files' },
-    { id: 'log', icon: '📋', label: 'Log' },
-  ];
-
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col max-w-lg mx-auto relative" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div className="min-h-screen bg-black text-white flex flex-col max-w-lg mx-auto" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
 
-      {/* Status Bar */}
-      <div className="sticky top-0 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold">PC</div>
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-2xl border-b border-zinc-800/60">
+        <div className="flex items-center justify-between px-5 h-14">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Monitor size={20} className="text-zinc-300" />
+              <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-black ${status.online ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
+            </div>
             <div>
-              <h1 className="text-sm font-semibold leading-tight">PC Control</h1>
-              <div className="flex items-center gap-1.5">
-                <div className={`w-1.5 h-1.5 rounded-full ${status.online ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]' : 'bg-red-400'}`} />
-                <span className="text-[10px] text-gray-400">{status.online ? 'Online' : 'Offline'} · {timeAgo(status.lastSeen)}</span>
-              </div>
+              <p className="text-[13px] font-semibold leading-none">My PC</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">
+                {status.online ? 'Connected' : 'Disconnected'} · {timeAgo(status.lastSeen)}
+              </p>
             </div>
           </div>
-          {loading && (
-            <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-[10px] text-blue-400 font-medium">Processing</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {loading && <Loader2 size={16} className="text-zinc-400 animate-spin" />}
+            {status.online ? <Wifi size={16} className="text-emerald-400" /> : <WifiOff size={16} className="text-zinc-600" />}
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto pb-20">
+      {/* Content */}
+      <main className="flex-1 overflow-y-auto pb-[72px]">
 
-        {/* HOME TAB */}
         {activeTab === 'home' && (
-          <div className="p-4 space-y-4">
-            {/* Command Input */}
-            <form onSubmit={handleSubmit} className="relative">
+          <div className="px-5 py-4 space-y-5">
+            {/* Command bar */}
+            <form onSubmit={handleSubmit} className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 h-11">
+              <Terminal size={15} className="text-zinc-500 shrink-0" />
               <input
                 value={cmd}
                 onChange={e => setCmd(e.target.value)}
-                placeholder="Type a command..."
-                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-4 pr-20 py-3.5 text-sm outline-none focus:border-blue-500/50 focus:bg-white/[0.07] transition-all placeholder:text-gray-600"
+                placeholder="Run a command..."
+                className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-zinc-600"
               />
-              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex gap-1">
-                <button type="submit" className="bg-blue-500 hover:bg-blue-600 active:scale-95 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all">Run</button>
-              </div>
+              <button type="submit" className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-white text-black hover:bg-zinc-200 active:scale-90 transition-all">
+                <ArrowUp size={14} strokeWidth={2.5} />
+              </button>
             </form>
 
-            {/* Quick Actions Grid */}
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-2 px-1">Quick Actions</p>
-              <div className="grid grid-cols-4 gap-2">
+            {/* Quick actions */}
+            <section>
+              <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">Quick Actions</p>
+              <div className="grid grid-cols-4 gap-3">
                 {[
-                  { icon: '📸', label: 'Screen', color: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-500/20', action: () => send('screenshot') },
-                  { icon: '🔒', label: 'Lock', color: 'from-red-500/20 to-red-600/10', border: 'border-red-500/20', action: () => send('lock') },
-                  { icon: '🌐', label: 'Chrome', color: 'from-green-500/20 to-green-600/10', border: 'border-green-500/20', action: () => send('open_app', 'chrome') },
-                  { icon: '📁', label: 'Files', color: 'from-yellow-500/20 to-yellow-600/10', border: 'border-yellow-500/20', action: () => setActiveTab('files') },
-                  { icon: '💬', label: 'Teams', color: 'from-indigo-500/20 to-indigo-600/10', border: 'border-indigo-500/20', action: () => send('open_app', 'teams') },
-                  { icon: '🎵', label: 'Spotify', color: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/20', action: () => send('open_app', 'spotify') },
-                  { icon: '🔇', label: 'Mute', color: 'from-gray-500/20 to-gray-600/10', border: 'border-gray-500/20', action: () => send('shell', 'powershell -c "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"') },
-                  { icon: '⚡', label: 'Task Mgr', color: 'from-orange-500/20 to-orange-600/10', border: 'border-orange-500/20', action: () => send('shell', 'start taskmgr') },
+                  { icon: Camera, label: 'Screenshot', bg: 'bg-violet-500/10', iconColor: 'text-violet-400', action: () => send('screenshot') },
+                  { icon: Lock, label: 'Lock', bg: 'bg-red-500/10', iconColor: 'text-red-400', action: () => send('lock') },
+                  { icon: Globe, label: 'Chrome', bg: 'bg-blue-500/10', iconColor: 'text-blue-400', action: () => send('open_app', 'chrome') },
+                  { icon: FolderOpen, label: 'Files', bg: 'bg-amber-500/10', iconColor: 'text-amber-400', action: () => setActiveTab('files') },
+                  { icon: MessageSquare, label: 'Teams', bg: 'bg-indigo-500/10', iconColor: 'text-indigo-400', action: () => send('open_app', 'teams') },
+                  { icon: Music, label: 'Spotify', bg: 'bg-emerald-500/10', iconColor: 'text-emerald-400', action: () => send('open_app', 'spotify') },
+                  { icon: VolumeX, label: 'Mute', bg: 'bg-zinc-500/10', iconColor: 'text-zinc-400', action: () => send('shell', 'powershell -c "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"') },
+                  { icon: Activity, label: 'Tasks', bg: 'bg-orange-500/10', iconColor: 'text-orange-400', action: () => send('shell', 'start taskmgr') },
                 ].map((item, i) => (
                   <button
                     key={i}
                     onClick={item.action}
-                    className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-gradient-to-b ${item.color} border ${item.border} active:scale-95 transition-all`}
+                    className="flex flex-col items-center gap-2 py-3 rounded-xl active:scale-95 transition-transform"
                   >
-                    <span className="text-xl">{item.icon}</span>
-                    <span className="text-[10px] font-medium text-gray-300">{item.label}</span>
+                    <div className={`w-11 h-11 rounded-2xl ${item.bg} flex items-center justify-center`}>
+                      <item.icon size={20} className={item.iconColor} />
+                    </div>
+                    <span className="text-[10px] font-medium text-zinc-400">{item.label}</span>
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Screenshot Preview */}
+            {/* System shortcuts */}
+            <section>
+              <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">System</p>
+              <div className="space-y-1.5">
+                {[
+                  { icon: Cpu, label: 'System Info', desc: 'View hardware details', action: () => send('shell', 'systeminfo | findstr /C:"OS Name" /C:"Total Physical Memory" /C:"System Model"') },
+                  { icon: HardDrive, label: 'Disk Space', desc: 'Check storage usage', action: () => send('shell', 'wmic logicaldisk get size,freespace,caption') },
+                  { icon: Wifi, label: 'Network', desc: 'Show IP configuration', action: () => send('shell', 'ipconfig') },
+                  { icon: Power, label: 'Shutdown (60s)', desc: 'Shutdown with 60s delay', action: () => send('shell', 'shutdown /s /t 60') },
+                ].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={item.action}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800/50 active:scale-[0.98] transition-all text-left"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
+                      <item.icon size={16} className="text-zinc-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium leading-tight">{item.label}</p>
+                      <p className="text-[11px] text-zinc-600 leading-tight mt-0.5">{item.desc}</p>
+                    </div>
+                    <ChevronRight size={14} className="text-zinc-700 ml-auto shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Screenshot */}
             {result?.screenshot && (
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-2 px-1">Latest Screenshot</p>
-                <div className="rounded-2xl overflow-hidden border border-white/10">
+              <section>
+                <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">Screenshot</p>
+                <div className="rounded-2xl overflow-hidden border border-zinc-800">
                   <img src={`data:image/png;base64,${result.screenshot}`} alt="Screenshot" className="w-full" />
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Latest Result */}
+            {/* Result */}
             {result?.output && !result?.screenshot && !Array.isArray(tryParse(result.output)) && (
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-2 px-1">Latest Result</p>
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
-                  <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto">{result.output}</pre>
+              <section>
+                <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-3">Output</p>
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
+                  <pre className="text-[12px] text-zinc-300 whitespace-pre-wrap font-mono leading-5 max-h-48 overflow-y-auto">{result.output}</pre>
                 </div>
-              </div>
+              </section>
             )}
           </div>
         )}
 
         {/* AI TAB */}
         {activeTab === 'ai' && (
-          <div className="p-4 space-y-4">
-            <div className="text-center py-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 mb-3">
-                <span className="text-3xl">🤖</span>
+          <div className="px-5 py-4 space-y-5">
+            <div className="text-center pt-2 pb-4">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700/50 mb-3">
+                <Bot size={26} className="text-zinc-300" />
               </div>
-              <h2 className="text-lg font-semibold">AI Assistant</h2>
-              <p className="text-xs text-gray-500 mt-1">Ask anything or tell me to do something on your PC</p>
+              <p className="text-[15px] font-semibold">AI Assistant</p>
+              <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed max-w-[260px] mx-auto">
+                Tell me what to do on your PC or ask me anything
+              </p>
             </div>
 
-            <form onSubmit={(e) => handleSubmit(e, 'ai')} className="relative">
-              <textarea
-                value={cmd}
-                onChange={e => setCmd(e.target.value)}
-                placeholder="e.g. Open Chrome and go to YouTube, send email to john@mail.com, what's the weather..."
-                rows={3}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm outline-none focus:border-indigo-500/50 focus:bg-white/[0.07] transition-all placeholder:text-gray-600 resize-none"
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e, 'ai'); } }}
-              />
-              <button type="submit" className="absolute right-2 bottom-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 active:scale-95 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all">
-                Send
-              </button>
+            <form onSubmit={(e) => handleSubmit(e, 'ai')}>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden focus-within:border-zinc-700 transition-colors">
+                <textarea
+                  value={cmd}
+                  onChange={e => setCmd(e.target.value)}
+                  placeholder="e.g. Open YouTube and search for lofi music..."
+                  rows={3}
+                  className="w-full bg-transparent px-4 pt-3 pb-1 text-[13px] outline-none placeholder:text-zinc-600 resize-none"
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e, 'ai'); } }}
+                />
+                <div className="flex items-center justify-between px-3 pb-2">
+                  <div />
+                  <button type="submit" className="flex items-center gap-1.5 bg-white text-black px-3.5 py-1.5 rounded-lg text-[12px] font-semibold hover:bg-zinc-200 active:scale-95 transition-all">
+                    <Send size={12} />
+                    Send
+                  </button>
+                </div>
+              </div>
             </form>
 
-            {/* AI Suggestions */}
+            {/* Chips */}
             <div className="flex flex-wrap gap-1.5">
-              {['Open Chrome', 'Take screenshot', 'Show my IP', 'Open YouTube', 'Lock PC', 'System info'].map((s, i) => (
+              {[
+                { icon: Camera, text: 'Take screenshot' },
+                { icon: Globe, text: 'Open Chrome' },
+                { icon: Search, text: 'Search Google' },
+                { icon: Lock, text: 'Lock PC' },
+                { icon: Cpu, text: 'System info' },
+                { icon: Play, text: 'Play music' },
+              ].map((s, i) => (
                 <button
                   key={i}
-                  onClick={() => send('ai', s)}
-                  className="bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-[11px] text-gray-400 hover:text-white hover:border-indigo-500/30 active:scale-95 transition-all"
+                  onClick={() => send('ai', s.text)}
+                  className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 active:scale-95 transition-all"
                 >
-                  {s}
+                  <s.icon size={11} />
+                  {s.text}
                 </button>
               ))}
             </div>
 
-            {/* AI Response */}
+            {/* Response */}
             {result?.output && !result?.screenshot && (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+              <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs">🤖</span>
-                  <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">AI Response</span>
+                  <div className="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center">
+                    <Bot size={13} className="text-zinc-400" />
+                  </div>
+                  <span className="text-[11px] text-zinc-500 font-medium">Response</span>
                 </div>
-                <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono leading-relaxed max-h-64 overflow-y-auto">{result.output}</pre>
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5">
+                  <pre className="text-[12px] text-zinc-300 whitespace-pre-wrap font-mono leading-5 max-h-72 overflow-y-auto">{result.output}</pre>
+                </div>
               </div>
             )}
           </div>
@@ -200,49 +248,66 @@ export default function App() {
 
         {/* FILES TAB */}
         {activeTab === 'files' && (
-          <div className="p-4 space-y-4">
-            <div className="flex gap-2">
-              <input
-                value={folderPath}
-                onChange={e => setFolderPath(e.target.value)}
-                placeholder="Enter folder path..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm outline-none focus:border-yellow-500/50 transition-all placeholder:text-gray-600"
-              />
+          <div className="px-5 py-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 h-10">
+                <Search size={14} className="text-zinc-500 shrink-0" />
+                <input
+                  value={folderPath}
+                  onChange={e => setFolderPath(e.target.value)}
+                  placeholder="Enter path..."
+                  className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-zinc-600"
+                />
+              </div>
               <button
                 onClick={() => send('list_files', folderPath)}
-                className="bg-yellow-500/20 border border-yellow-500/20 hover:bg-yellow-500/30 active:scale-95 px-4 rounded-2xl text-yellow-400 text-sm font-semibold transition-all"
+                className="h-10 px-4 bg-white text-black rounded-xl text-[12px] font-semibold hover:bg-zinc-200 active:scale-95 transition-all"
               >
-                Go
+                Open
               </button>
             </div>
 
-            {/* Quick paths */}
-            <div className="flex flex-wrap gap-1.5">
-              {['C:\\', 'C:\\Users', 'D:\\', 'C:\\Program Files'].map((p, i) => (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+              {['C:\\', 'C:\\Users', 'D:\\', 'C:\\Program Files', 'C:\\Windows'].map((p, i) => (
                 <button
                   key={i}
                   onClick={() => { setFolderPath(p); send('list_files', p); }}
-                  className="bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-[11px] text-gray-400 hover:text-white hover:border-yellow-500/30 active:scale-95 transition-all"
+                  className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all active:scale-95 ${folderPath === p ? 'bg-white text-black' : 'bg-zinc-900 border border-zinc-800 text-zinc-400'}`}
                 >
                   {p}
                 </button>
               ))}
             </div>
 
-            {/* File list */}
             {result?.output && Array.isArray(tryParse(result.output)) && (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {tryParse(result.output).map((f, i) => (
                   <button
                     key={i}
-                    onClick={() => { if (f.type === 'dir') { const newPath = folderPath.endsWith('\\') ? folderPath + f.name : folderPath + '\\' + f.name; setFolderPath(newPath); send('list_files', newPath); } }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${f.type === 'dir' ? 'bg-yellow-500/5 border border-yellow-500/10 hover:bg-yellow-500/10 active:scale-[0.98]' : 'bg-white/[0.02] border border-white/5'}`}
+                    onClick={() => {
+                      if (f.type === 'dir') {
+                        const np = folderPath.endsWith('\\') ? folderPath + f.name : folderPath + '\\' + f.name;
+                        setFolderPath(np);
+                        send('list_files', np);
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-900/80 active:scale-[0.98] transition-all text-left"
                   >
-                    <span className="text-lg">{f.type === 'dir' ? '📁' : '📄'}</span>
-                    <span className={`text-xs font-medium truncate ${f.type === 'dir' ? 'text-yellow-300' : 'text-gray-400'}`}>{f.name}</span>
-                    {f.type === 'dir' && <span className="ml-auto text-gray-600 text-xs">›</span>}
+                    {f.type === 'dir'
+                      ? <FolderClosed size={18} className="text-amber-400 shrink-0" />
+                      : <FileText size={18} className="text-zinc-500 shrink-0" />
+                    }
+                    <span className={`text-[13px] truncate ${f.type === 'dir' ? 'font-medium text-zinc-200' : 'text-zinc-500'}`}>{f.name}</span>
+                    {f.type === 'dir' && <ChevronRight size={14} className="text-zinc-700 ml-auto shrink-0" />}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {(!result?.output || !Array.isArray(tryParse(result.output))) && (
+              <div className="text-center py-16">
+                <FolderOpen size={32} className="text-zinc-700 mx-auto mb-3" />
+                <p className="text-[13px] text-zinc-600">Enter a path and tap Open</p>
               </div>
             )}
           </div>
@@ -250,42 +315,53 @@ export default function App() {
 
         {/* LOG TAB */}
         {activeTab === 'log' && (
-          <div className="p-4 space-y-2">
-            {log.length === 0 && (
-              <div className="text-center py-12">
-                <span className="text-4xl mb-3 block">📋</span>
-                <p className="text-sm text-gray-500">No commands executed yet</p>
+          <div className="px-5 py-4">
+            {log.length === 0 ? (
+              <div className="text-center py-16">
+                <ScrollText size={32} className="text-zinc-700 mx-auto mb-3" />
+                <p className="text-[13px] text-zinc-600">No activity yet</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {[...log].reverse().map((entry) => (
+                  <div key={entry.id} className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] text-zinc-600 font-mono">{entry.time}</span>
+                      {entry.hasScreenshot && (
+                        <span className="flex items-center gap-1 text-[10px] text-violet-400 bg-violet-500/10 rounded-md px-1.5 py-0.5">
+                          <Camera size={9} /> Screenshot
+                        </span>
+                      )}
+                    </div>
+                    <pre className="text-[11px] text-zinc-400 whitespace-pre-wrap font-mono leading-4 max-h-28 overflow-y-auto">{entry.output}</pre>
+                  </div>
+                ))}
               </div>
             )}
-            {[...log].reverse().map((entry, i) => (
-              <div key={entry.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-3">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] text-gray-500 font-mono">{entry.time}</span>
-                  {entry.hasScreenshot && <span className="text-[10px] bg-purple-500/20 text-purple-300 rounded-full px-2 py-0.5">📸 Screenshot</span>}
-                </div>
-                <pre className="text-[11px] text-gray-400 whitespace-pre-wrap font-mono leading-relaxed max-h-32 overflow-y-auto">{entry.output}</pre>
-              </div>
-            ))}
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 max-w-lg mx-auto">
-        <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/5 px-6 py-2 flex justify-around">
-          {tabs.map(tab => (
+      {/* Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 max-w-lg mx-auto bg-black/90 backdrop-blur-2xl border-t border-zinc-800/60">
+        <div className="flex justify-around px-4 h-[68px] items-center">
+          {[
+            { id: 'home', icon: Home, label: 'Home' },
+            { id: 'ai', icon: Bot, label: 'AI' },
+            { id: 'files', icon: FolderOpen, label: 'Files' },
+            { id: 'log', icon: ScrollText, label: 'Log' },
+          ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all ${activeTab === tab.id ? 'text-white' : 'text-gray-600'}`}
+              className={`flex flex-col items-center gap-1 w-16 py-1 transition-colors ${activeTab === tab.id ? 'text-white' : 'text-zinc-600'}`}
             >
-              <span className={`text-lg transition-all ${activeTab === tab.id ? 'scale-110' : ''}`}>{tab.icon}</span>
-              <span className={`text-[9px] font-semibold tracking-wide ${activeTab === tab.id ? 'text-blue-400' : ''}`}>{tab.label}</span>
-              {activeTab === tab.id && <div className="w-1 h-1 rounded-full bg-blue-400 mt-0.5" />}
+              <tab.icon size={20} strokeWidth={activeTab === tab.id ? 2 : 1.5} />
+              <span className="text-[10px] font-medium">{tab.label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </nav>
     </div>
   );
 }
