@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { Bot, Camera, Globe, Search, Lock, Cpu, Play, ArrowUp, ChevronDown } from 'lucide-react';
+import { Bot, Camera, Globe, Search, Lock, Cpu, Play, ArrowUp, ChevronDown, Mic, MicOff } from 'lucide-react';
 
 function TruncatedText({ text, className }) {
   const [expanded, setExpanded] = useState(false);
@@ -28,6 +28,36 @@ function TruncatedText({ text, className }) {
 
 export default function ChatTab({ cmd, setCmd, messages, loading, send, handleSubmit }) {
   const chatEndRef = useRef(null);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const toggleVoice = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert('Speech recognition not supported in this browser'); return; }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognitionRef.current = recognition;
+    let finalTranscript = '';
+    recognition.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
+        else interim += e.results[i][0].transcript;
+      }
+      setCmd(finalTranscript + interim);
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognition.start();
+    setListening(true);
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -135,6 +165,15 @@ export default function ChatTab({ cmd, setCmd, messages, loading, send, handleSu
               onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 80) + 'px'; }}
             />
           </div>
+          <button
+            type="button"
+            onClick={toggleVoice}
+            className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-all ${
+              listening ? 'bg-red-500 text-white animate-pulse' : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            }`}
+          >
+            {listening ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
           <button
             type="submit"
             disabled={!cmd.trim()}
