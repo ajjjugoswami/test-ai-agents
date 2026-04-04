@@ -1,9 +1,10 @@
-import { Home, Bot, FolderOpen, ScrollText } from 'lucide-react';
+import { Home, Bot, FolderOpen, Link2, ScrollText } from 'lucide-react';
 
 const tabs = [
   { id: 'home', icon: Home, label: 'Home' },
   { id: 'ai', icon: Bot, label: 'AI' },
   { id: 'files', icon: FolderOpen, label: 'Files' },
+  { id: 'connect', icon: Link2, label: 'Connect' },
   { id: 'log', icon: ScrollText, label: 'Log' },
 ];
 

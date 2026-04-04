@@ -6,6 +6,7 @@ import HomeTab from './components/HomeTab';
 import ChatTab from './components/ChatTab';
 import FilesTab from './components/FilesTab';
 import LogTab from './components/LogTab';
+import ConnectTab from './components/ConnectTab';
 
 export default function App() {
   const [status, setStatus] = useState({ online: false, lastSeen: null });
@@ -85,6 +86,9 @@ export default function App() {
         )}
         {activeTab === 'files' && (
           <FilesTab folderPath={folderPath} setFolderPath={setFolderPath} result={result} send={send} />
+        )}
+        {activeTab === 'connect' && (
+          <ConnectTab />
         )}
         {activeTab === 'log' && (
           <LogTab log={log} />

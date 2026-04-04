@@ -18,3 +18,17 @@ export async function getStatus() {
   const res = await fetch(`${API}/status`);
   return res.json();
 }
+
+export async function getGoogleStatus() {
+  const res = await fetch(`${API}/auth/google/status`);
+  return res.json();
+}
+
+export function getGoogleAuthUrl() {
+  return `${API}/auth/google`;
+}
+
+export async function disconnectGoogle() {
+  const res = await fetch(`${API}/auth/google/disconnect`, { method: 'POST' });
+  return res.json();
+}
