@@ -1,5 +1,20 @@
 import { useRef, useEffect, useState } from 'react';
-import { Bot, Camera, Globe, Search, Lock, Cpu, Play, ArrowUp, ChevronDown, Mic, MicOff } from 'lucide-react';
+import { Bot, Camera, Globe, Search, Lock, Cpu, Play, ArrowUp, ChevronDown, Mic, MicOff, Plus, Mail, Monitor, Volume2, FolderOpen, Terminal, MessageSquare } from 'lucide-react';
+
+const BUILT_IN_PROMPTS = [
+  { icon: Camera, label: 'Screenshot', prompt: 'Take a screenshot of my screen', color: 'text-violet-400', bg: 'bg-violet-500/10' },
+  { icon: Globe, label: 'Open Website', prompt: 'Open Chrome and go to google.com', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  { icon: Mail, label: 'Send Email', prompt: 'Send an email to ', color: 'text-red-400', bg: 'bg-red-500/10' },
+  { icon: Mail, label: 'Draft Email', prompt: 'Draft a professional email to ', color: 'text-orange-400', bg: 'bg-orange-500/10' },
+  { icon: Monitor, label: 'System Info', prompt: 'Show me my system info, RAM, CPU, and OS details', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+  { icon: Lock, label: 'Lock PC', prompt: 'Lock my PC', color: 'text-red-400', bg: 'bg-red-500/10' },
+  { icon: Volume2, label: 'Mute/Unmute', prompt: 'Mute my PC volume', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  { icon: Play, label: 'Play YouTube', prompt: 'Search and play a video on YouTube about ', color: 'text-rose-400', bg: 'bg-rose-500/10' },
+  { icon: FolderOpen, label: 'List Files', prompt: 'List all files on my Desktop', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  { icon: Terminal, label: 'Run Command', prompt: 'Run this command: ', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  { icon: MessageSquare, label: 'Open Teams', prompt: 'Open Microsoft Teams', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  { icon: Cpu, label: 'Disk Space', prompt: 'Show me disk space usage on all drives', color: 'text-teal-400', bg: 'bg-teal-500/10' },
+];
 
 function TruncatedText({ text, className }) {
   const [expanded, setExpanded] = useState(false);
@@ -26,7 +41,7 @@ function TruncatedText({ text, className }) {
   );
 }
 
-export default function ChatTab({ cmd, setCmd, messages, loading, send, handleSubmit }) {
+export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, setLoading, send, handleSubmit }) {
   const chatEndRef = useRef(null);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -65,32 +80,52 @@ export default function ChatTab({ cmd, setCmd, messages, loading, send, handleSu
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 56px - 72px)' }}>
+      {/* Top bar with New Chat */}
+      {messages.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800/60">
+          <p className="text-[12px] text-zinc-500">{messages.filter(m => m.role === 'user').length} messages</p>
+          <button
+            onClick={() => { setMessages([]); setLoading(false); }}
+            className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1.5 text-[11px] text-zinc-400 hover:text-white hover:border-zinc-600 active:scale-95 transition-all"
+          >
+            <Plus size={12} />
+            New Chat
+          </button>
+        </div>
+      )}
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.length === 0 && !loading && (
-          <div className="flex flex-col items-center justify-center h-full gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-              <Bot size={26} className="text-zinc-500" />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col items-center gap-2 pt-4 pb-2">
+              <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                <Bot size={26} className="text-zinc-500" />
+              </div>
+              <p className="text-[14px] font-semibold">What can I help with?</p>
+              <p className="text-[12px] text-zinc-500 text-center max-w-[260px]">
+                Control your PC, send emails, open apps, browse the web, or ask anything
+              </p>
             </div>
-            <p className="text-[13px] text-zinc-500 text-center max-w-[220px]">
-              Send a message to control your PC or ask anything
-            </p>
-            <div className="flex flex-wrap justify-center gap-1.5 mt-2">
-              {[
-                { icon: Camera, text: 'Take screenshot' },
-                { icon: Globe, text: 'Open Chrome' },
-                { icon: Search, text: 'Search Google' },
-                { icon: Lock, text: 'Lock PC' },
-                { icon: Cpu, text: 'System info' },
-                { icon: Play, text: 'Play music' },
-              ].map((s, i) => (
+            <div className="grid grid-cols-2 gap-2">
+              {BUILT_IN_PROMPTS.map((p, i) => (
                 <button
                   key={i}
-                  onClick={() => send('ai', s.text)}
-                  className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 active:scale-95 transition-all"
+                  onClick={() => {
+                    if (p.prompt.endsWith(' ')) {
+                      setCmd(p.prompt);
+                    } else {
+                      send('ai', p.prompt);
+                    }
+                  }}
+                  className="flex items-start gap-2.5 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-3 text-left hover:bg-zinc-800/70 hover:border-zinc-700 active:scale-[0.97] transition-all"
                 >
-                  <s.icon size={11} />
-                  {s.text}
+                  <div className={`w-8 h-8 rounded-lg ${p.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                    <p.icon size={15} className={p.color} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-medium leading-tight">{p.label}</p>
+                    <p className="text-[10px] text-zinc-600 leading-tight mt-0.5 line-clamp-2">{p.prompt}{p.prompt.endsWith(' ') ? '...' : ''}</p>
+                  </div>
                 </button>
               ))}
             </div>

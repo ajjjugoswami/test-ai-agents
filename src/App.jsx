@@ -82,7 +82,7 @@ export default function App() {
           <HomeTab cmd={cmd} setCmd={setCmd} result={result} send={send} handleSubmit={handleSubmit} setActiveTab={setActiveTab} />
         )}
         {activeTab === 'ai' && (
-          <ChatTab cmd={cmd} setCmd={setCmd} messages={messages} loading={loading} send={send} handleSubmit={handleSubmit} />
+          <ChatTab cmd={cmd} setCmd={setCmd} messages={messages} setMessages={setMessages} loading={loading} setLoading={setLoading} send={send} handleSubmit={handleSubmit} />
         )}
         {activeTab === 'files' && (
           <FilesTab folderPath={folderPath} setFolderPath={setFolderPath} result={result} send={send} />
