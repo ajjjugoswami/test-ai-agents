@@ -39,6 +39,7 @@ export default function App() {
             role: 'bot',
             text: r.output,
             screenshot: r.screenshot || null,
+            suggestions: r.suggestions || [],
             time: new Date(r.receivedAt).toLocaleTimeString(),
           }]);
           setLoading(false);

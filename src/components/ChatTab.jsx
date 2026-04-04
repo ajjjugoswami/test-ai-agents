@@ -101,9 +101,9 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
               <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
                 <Bot size={26} className="text-zinc-500" />
               </div>
-              <p className="text-[14px] font-semibold">What can I help with?</p>
+              <p className="text-[14px] font-semibold">Hey, I'm JARVIS</p>
               <p className="text-[12px] text-zinc-500 text-center max-w-[260px]">
-                Control your PC, send emails, open apps, browse the web, or ask anything
+                I remember our conversations and learn your preferences. What can I do for you?
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -157,6 +157,20 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
                     {msg.role === 'bot' ? <TruncatedText text={msg.text} /> : msg.text}
                   </p>
                 </div>
+                {/* Suggestion chips */}
+                {msg.role === 'bot' && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2 px-1">
+                    {msg.suggestions.map((s, si) => (
+                      <button
+                        key={si}
+                        onClick={() => send('ai', s)}
+                        className="text-[11px] px-3 py-1.5 rounded-full bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-white active:scale-95 transition-all"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <p className={`text-[10px] text-zinc-600 px-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
                   {msg.time}
                 </p>
