@@ -13,11 +13,20 @@ export default function App() {
   const [cmd, setCmd] = useState('');
   const [folderPath, setFolderPath] = useState('C:\\');
   const [result, setResult] = useState(null);
-  const [log, setLog] = useState([]);
-  const [messages, setMessages] = useState([]);
+  const [log, setLog] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('jarvis_log') || '[]'); } catch { return []; }
+  });
+  const [messages, setMessages] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('jarvis_messages') || '[]'); } catch { return []; }
+  });
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('jarvis_tab') || 'home');
   const lastResultId = useRef(null);
+
+  // Persist to localStorage
+  useEffect(() => { localStorage.setItem('jarvis_messages', JSON.stringify(messages)); }, [messages]);
+  useEffect(() => { localStorage.setItem('jarvis_log', JSON.stringify(log)); }, [log]);
+  useEffect(() => { localStorage.setItem('jarvis_tab', activeTab); }, [activeTab]);
 
   useEffect(() => {
     const interval = setInterval(async () => {

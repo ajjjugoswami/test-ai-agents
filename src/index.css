@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Cursor pointer on all interactive elements */
+button, a, [role="button"], input[type="submit"], select, label[for], summary {
+  cursor: pointer;
+}
+
 /* Hide scrollbars everywhere */
 * {
   scrollbar-width: none;
