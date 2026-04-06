@@ -12,7 +12,7 @@ export default function Header({ status, loading, timeAgo }) {
             <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-black ${status.online ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
           </div>
           <div>
-            <p className="text-[13px] font-bold leading-none tracking-tight">JARVIS</p>
+            <p className="text-[13px] font-bold leading-none tracking-tight">IGRIS</p>
             <p className="text-[11px] text-zinc-500 mt-0.5">
               {status.online ? (
                 <span className="text-emerald-400">Online</span>
