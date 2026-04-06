@@ -11,7 +11,7 @@ const tabs = [
 export default function BottomNav({ activeTab, setActiveTab }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 max-w-lg mx-auto bg-black/95 backdrop-blur-2xl border-t border-zinc-800/40">
-      <div className="flex justify-around px-4 h-[68px] items-center">
+      <div className="flex justify-around px-4 h-[68px] items-center pb-[env(safe-area-inset-bottom)]">
         {tabs.map(tab => (
           <button
             key={tab.id}
