@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001' || 'http://192.168.1.21:3000';
 
 export async function sendCommand(type, payload) {
   const res = await fetch(`${API}/command`, {
