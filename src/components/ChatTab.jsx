@@ -196,14 +196,22 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
     setListening(true);
   };
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatEndRef.current) {
+      // Delay to ensure DOM is updated
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 100);
+    }
   }, [messages, loading]);
 
-  // Auto-focus input
+  // Reset textarea height when cleared
   useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
+    if (!cmd && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  }, [cmd]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -224,8 +232,8 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      {/* Messages - Scrollable area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 py-4 space-y-4 scroll-smooth">
         {/* Empty state */}
         {messages.length === 0 && !loading && (
           <div className="flex flex-col gap-6">
@@ -275,10 +283,10 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
         {/* Chat messages */}
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} msg-appear group/msg`}>
-            <div className={`max-w-[88%] ${msg.role === 'bot' ? 'flex gap-2.5 items-start' : ''}`}>
+            <div className={`max-w-[90%] sm:max-w-[88%] ${msg.role === 'bot' ? 'flex gap-2 sm:gap-2.5 items-start' : ''}`}>
               {msg.role === 'bot' && (
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
-                  <Zap size={13} className="text-violet-400" />
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                  <Zap size={12} className="text-violet-400 sm:w-[13px] sm:h-[13px]" />
                 </div>
               )}
               <div className="space-y-1.5">
@@ -302,8 +310,8 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
                   <>
                     <div className={`rounded-2xl ${
                       msg.role === 'user'
-                        ? 'bg-gradient-to-br from-violet-600 to-blue-600 text-white rounded-tr-sm px-4 py-2.5 shadow-lg shadow-violet-500/10'
-                        : 'bg-zinc-900/80 border border-zinc-800/60 rounded-tl-sm'
+                        ? 'bg-gradient-to-br from-violet-600 to-blue-600 text-white rounded-tr-sm px-3.5 py-2.5 sm:px-4 sm:py-2.5 shadow-lg shadow-violet-500/10'
+                        : 'bg-zinc-900/90 border border-zinc-800/70 rounded-tl-sm'
                     }`}>
                       {msg.screenshot && (
                         <div className={`overflow-hidden ${msg.role === 'bot' ? 'rounded-t-2xl rounded-tl-sm' : 'rounded-t-2xl rounded-tr-sm'}`}>
@@ -411,37 +419,48 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="border-t border-zinc-800/40 bg-zinc-950/80 backdrop-blur-sm px-4 py-3">
+      {/* Input area - Fixed at bottom with safe area support */}
+      <div className="border-t border-zinc-800/40 bg-black/95 backdrop-blur-xl px-3 sm:px-4 py-2.5 sm:py-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))] sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <form onSubmit={(e) => handleSubmit(e, 'ai')} className="flex items-end gap-2">
-          <div className="flex-1 bg-zinc-900/80 border border-zinc-800/60 rounded-2xl px-4 py-2.5 focus-within:border-violet-500/30 focus-within:bg-zinc-900 transition-all">
+          <div className="flex-1 bg-zinc-900/90 border border-zinc-800/70 rounded-2xl px-3.5 sm:px-4 py-2.5 focus-within:border-violet-500/40 focus-within:bg-zinc-900 focus-within:shadow-lg focus-within:shadow-violet-500/10 transition-all">
             <textarea
               ref={textareaRef}
               value={cmd}
-              onChange={e => setCmd(e.target.value)}
+              onChange={e => {
+                setCmd(e.target.value);
+                // Auto-resize
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
               placeholder="Ask me anything..."
               rows={1}
-              className="w-full bg-transparent text-[14px] outline-none placeholder:text-zinc-600 resize-none leading-5"
-              style={{ maxHeight: '100px' }}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e, 'ai'); } }}
-              onInput={e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px'; }}
+              className="w-full bg-transparent text-[14px] sm:text-[15px] outline-none placeholder:text-zinc-600 resize-none leading-[1.4] text-white"
+              style={{ maxHeight: '120px', minHeight: '20px' }}
+              onKeyDown={e => { 
+                if (e.key === 'Enter' && !e.shiftKey) { 
+                  e.preventDefault(); 
+                  if (cmd.trim()) handleSubmit(e, 'ai'); 
+                } 
+              }}
             />
           </div>
           <button
             type="button"
             onClick={toggleVoice}
-            className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all ${
-              listening ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' : 'bg-zinc-800/80 border border-zinc-700/50 text-zinc-400 hover:text-white hover:border-zinc-600'
+            className={`shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center active:scale-95 transition-all touch-manipulation ${
+              listening ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' : 'bg-zinc-800/90 border border-zinc-700/60 text-zinc-400 hover:text-white hover:bg-zinc-700/90 hover:border-zinc-600'
             }`}
+            aria-label="Voice input"
           >
-            {listening ? <MicOff size={17} /> : <Mic size={17} />}
+            {listening ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
           <button
             type="submit"
             disabled={!cmd.trim()}
-            className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white flex items-center justify-center hover:from-violet-500 hover:to-blue-500 active:scale-90 transition-all disabled:opacity-20 disabled:from-zinc-700 disabled:to-zinc-700 shadow-lg shadow-violet-500/20"
+            className="shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white flex items-center justify-center hover:from-violet-500 hover:to-blue-500 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:from-zinc-700 disabled:to-zinc-700 shadow-lg shadow-violet-500/20 touch-manipulation"
+            aria-label="Send message"
           >
-            <ArrowUp size={17} strokeWidth={2.5} />
+            <ArrowUp size={18} strokeWidth={2.5} />
           </button>
         </form>
       </div>
