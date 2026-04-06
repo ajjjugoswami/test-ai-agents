@@ -2,7 +2,8 @@ import { useRef, useEffect, useState } from 'react';
 import {
   Bot, Camera, Globe, Lock, Cpu, Play, ArrowUp, ChevronDown, Mic, MicOff,
   Plus, Mail, Monitor, Volume2, FolderOpen, Terminal, MessageSquare,
-  Sparkles, Code2, Copy, Check, Zap, FileCode, Laptop, Palette
+  Sparkles, Code2, Copy, Check, Zap, FileCode, Laptop, Palette,
+  RotateCcw, Pencil, Trash2, ClipboardCopy
 } from 'lucide-react';
 
 const BUILT_IN_PROMPTS = [
@@ -121,6 +122,51 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
   const textareaRef = useRef(null);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
+  const [editingIdx, setEditingIdx] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [copiedMsgIdx, setCopiedMsgIdx] = useState(null);
+
+  const retryMessage = (idx) => {
+    // Find the user message at or before idx to resend
+    let userMsg = null;
+    for (let i = idx; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        userMsg = messages[i];
+        break;
+      }
+    }
+    if (userMsg) {
+      // Remove the bot response at idx (and the user msg if retrying from bot)
+      const newMessages = messages.filter((_, i) => i !== idx);
+      setMessages(newMessages);
+      send('ai', userMsg.text);
+    }
+  };
+
+  const editAndResend = (idx) => {
+    if (!editText.trim()) return;
+    // Remove this message and all after it
+    const newMessages = messages.slice(0, idx);
+    setMessages(newMessages);
+    send('ai', editText.trim());
+    setEditingIdx(null);
+    setEditText('');
+  };
+
+  const startEditing = (idx) => {
+    setEditingIdx(idx);
+    setEditText(messages[idx].text);
+  };
+
+  const copyMessage = (text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMsgIdx(idx);
+    setTimeout(() => setCopiedMsgIdx(null), 2000);
+  };
+
+  const deleteMessage = (idx) => {
+    setMessages(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const toggleVoice = () => {
     if (listening) {
@@ -228,7 +274,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
 
         {/* Chat messages */}
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} msg-appear`}>
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} msg-appear group/msg`}>
             <div className={`max-w-[88%] ${msg.role === 'bot' ? 'flex gap-2.5 items-start' : ''}`}>
               {msg.role === 'bot' && (
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
@@ -236,38 +282,101 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
                 </div>
               )}
               <div className="space-y-1.5">
-                <div className={`rounded-2xl ${
-                  msg.role === 'user'
-                    ? 'bg-gradient-to-br from-violet-600 to-blue-600 text-white rounded-tr-sm px-4 py-2.5 shadow-lg shadow-violet-500/10'
-                    : 'bg-zinc-900/80 border border-zinc-800/60 rounded-tl-sm'
-                }`}>
-                  {msg.screenshot && (
-                    <div className={`overflow-hidden ${msg.role === 'bot' ? 'rounded-t-2xl rounded-tl-sm' : 'rounded-t-2xl rounded-tr-sm'}`}>
-                      <img src={`data:image/png;base64,${msg.screenshot}`} alt="Screenshot" className="w-full block" />
+                {/* Editing mode for user messages */}
+                {editingIdx === i && msg.role === 'user' ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      className="w-full bg-zinc-900 border border-violet-500/40 rounded-xl px-3 py-2 text-[13px] text-white outline-none resize-none"
+                      rows={3}
+                      autoFocus
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editAndResend(i); } }}
+                    />
+                    <div className="flex gap-1.5 justify-end">
+                      <button onClick={() => { setEditingIdx(null); setEditText(''); }} className="text-[11px] px-3 py-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white transition-all">Cancel</button>
+                      <button onClick={() => editAndResend(i)} className="text-[11px] px-3 py-1 rounded-lg bg-violet-600 text-white hover:bg-violet-500 transition-all">Resend</button>
                     </div>
-                  )}
-                  <div className={
-                    msg.role === 'user'
-                      ? 'text-[13px] leading-relaxed'
-                      : `px-3.5 py-3 text-zinc-300 ${msg.screenshot ? 'border-t border-zinc-800/60' : ''}`
-                  }>
-                    {msg.role === 'bot' ? <FormattedText text={msg.text} /> : <span className="text-[13px] leading-relaxed whitespace-pre-wrap break-words">{msg.text}</span>}
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className={`rounded-2xl ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-br from-violet-600 to-blue-600 text-white rounded-tr-sm px-4 py-2.5 shadow-lg shadow-violet-500/10'
+                        : 'bg-zinc-900/80 border border-zinc-800/60 rounded-tl-sm'
+                    }`}>
+                      {msg.screenshot && (
+                        <div className={`overflow-hidden ${msg.role === 'bot' ? 'rounded-t-2xl rounded-tl-sm' : 'rounded-t-2xl rounded-tr-sm'}`}>
+                          <img src={`data:image/png;base64,${msg.screenshot}`} alt="Screenshot" className="w-full block" />
+                        </div>
+                      )}
+                      <div className={
+                        msg.role === 'user'
+                          ? 'text-[13px] leading-relaxed'
+                          : `px-3.5 py-3 text-zinc-300 ${msg.screenshot ? 'border-t border-zinc-800/60' : ''}`
+                      }>
+                        {msg.role === 'bot' ? <FormattedText text={msg.text} /> : <span className="text-[13px] leading-relaxed whitespace-pre-wrap break-words">{msg.text}</span>}
+                      </div>
+                    </div>
 
-                {/* Suggestion chips */}
-                {msg.role === 'bot' && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2 px-0.5">
-                    {msg.suggestions.map((s, si) => (
+                    {/* Action buttons — visible on hover */}
+                    <div className={`flex items-center gap-0.5 px-1 ${msg.role === 'user' ? 'justify-end' : ''} opacity-0 group-hover/msg:opacity-100 transition-opacity`}>
+                      {/* Copy */}
                       <button
-                        key={si}
-                        onClick={() => send('ai', s)}
-                        className="text-[11px] px-3 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/40 text-zinc-400 hover:bg-violet-500/10 hover:border-violet-500/30 hover:text-violet-300 active:scale-95 transition-all"
+                        onClick={() => copyMessage(msg.text, i)}
+                        className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800/60 transition-all"
+                        title="Copy message"
                       >
-                        {s}
+                        {copiedMsgIdx === i ? <Check size={12} className="text-emerald-400" /> : <ClipboardCopy size={12} />}
                       </button>
-                    ))}
-                  </div>
+
+                      {/* Edit (user messages only) */}
+                      {msg.role === 'user' && (
+                        <button
+                          onClick={() => startEditing(i)}
+                          className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800/60 transition-all"
+                          title="Edit & resend"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                      )}
+
+                      {/* Retry (bot messages only) */}
+                      {msg.role === 'bot' && (
+                        <button
+                          onClick={() => retryMessage(i)}
+                          className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800/60 transition-all"
+                          title="Retry"
+                        >
+                          <RotateCcw size={12} />
+                        </button>
+                      )}
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => deleteMessage(i)}
+                        className="p-1.5 rounded-md text-zinc-600 hover:text-red-400 hover:bg-zinc-800/60 transition-all"
+                        title="Delete message"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+
+                    {/* Suggestion chips */}
+                    {msg.role === 'bot' && msg.suggestions && msg.suggestions.length > 0 && i === messages.length - 1 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1 px-0.5">
+                        {msg.suggestions.map((s, si) => (
+                          <button
+                            key={si}
+                            onClick={() => send('ai', s)}
+                            className="text-[11px] px-3 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/40 text-zinc-400 hover:bg-violet-500/10 hover:border-violet-500/30 hover:text-violet-300 active:scale-95 transition-all"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <p className={`text-[10px] text-zinc-600 px-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
