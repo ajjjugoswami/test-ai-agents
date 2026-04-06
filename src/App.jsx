@@ -28,11 +28,18 @@ export default function App() {
   useEffect(() => { localStorage.setItem('jarvis_log', JSON.stringify(log)); }, [log]);
   useEffect(() => { localStorage.setItem('jarvis_tab', activeTab); }, [activeTab]);
 
+  // Status check — every 15s
+  useEffect(() => {
+    const check = async () => { try { setStatus(await getStatus()); } catch {} };
+    check();
+    const interval = setInterval(check, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Result polling — every 3s only while loading, otherwise every 10s
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const s = await getStatus();
-        setStatus(s);
         const r = await getLatestResult();
         if (r && r.commandId !== lastResultId.current) {
           lastResultId.current = r.commandId;
@@ -52,11 +59,13 @@ export default function App() {
             time: new Date(r.receivedAt).toLocaleTimeString(),
           }]);
           setLoading(false);
+          // Refresh status after getting a result
+          try { setStatus(await getStatus()); } catch {}
         }
       } catch {}
-    }, 3000);
+    }, loading ? 3000 : 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loading]);
 
   const send = async (type, payload) => {
     setLoading(true);
