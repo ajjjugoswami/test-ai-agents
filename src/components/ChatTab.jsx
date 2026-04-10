@@ -247,7 +247,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
                 </div>
               </div>
               <div className="text-center">
-                <h2 className="text-[16px] font-bold tracking-tight">IGRIS</h2>
+                <h2 className="text-[16px] font-bold tracking-tight">KAKAROT</h2>
                 <p className="text-[12px] text-zinc-500 mt-1 max-w-[280px] leading-relaxed">
                   Your AI assistant with full PC control. I can open apps, write code, create projects, manage files, send emails, and more.
                 </p>
