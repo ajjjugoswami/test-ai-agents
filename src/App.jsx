@@ -93,10 +93,10 @@ export default function App() {
   };
 
   return (
-    <div className="h-[100dvh] bg-black text-white flex flex-col max-w-lg mx-auto" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div className="h-dvh bg-black text-white flex flex-col max-w-lg mx-auto" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <Header status={status} loading={loading} timeAgo={timeAgo} />
 
-      <main className={`flex-1 pb-[72px] bg-black ${activeTab === 'ai' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <main className={`flex-1 pb-18 bg-black ${activeTab === 'ai' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         {activeTab === 'home' && (
           <HomeTab cmd={cmd} setCmd={setCmd} result={result} send={send} handleSubmit={handleSubmit} setActiveTab={setActiveTab} />
         )}

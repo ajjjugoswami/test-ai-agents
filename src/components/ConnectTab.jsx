@@ -34,7 +34,7 @@ export default function ConnectTab() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-red-500 to-yellow-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 via-red-500 to-yellow-500 flex items-center justify-center">
                 <span className="text-white font-bold text-[16px]">G</span>
               </div>
               <div>
