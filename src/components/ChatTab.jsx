@@ -88,7 +88,7 @@ function FormattedText({ text }) {
     const truncated = lines.slice(0, 10).join('\n');
     const truncParts = truncated.split(/(```[\s\S]*?```)/g);
     return (
-      <div className="text-[13px] leading-relaxed whitespace-pre-wrap break-words">
+      <div className="text-[13px] leading-relaxed whitespace-pre-wrap wrap-break-word">
         {truncParts.map((part, i) => {
           if (part.startsWith('```')) {
             const inner = part.slice(3, -3);
@@ -106,7 +106,7 @@ function FormattedText({ text }) {
   }
 
   return (
-    <div className="text-[13px] leading-relaxed whitespace-pre-wrap break-words">
+    <div className="text-[13px] leading-relaxed whitespace-pre-wrap wrap-break-word">
       {rendered}
       {isLong && expanded && (
         <button onClick={() => setExpanded(false)} className="flex items-center gap-1 mt-1 text-[11px] text-violet-400 hover:text-violet-300 transition-colors">
@@ -239,7 +239,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
           <div className="flex flex-col gap-6">
             <div className="flex flex-col items-center gap-3 pt-6 pb-2">
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/20 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/20 flex items-center justify-center">
                   <Zap size={28} className="text-violet-400" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-black flex items-center justify-center">
@@ -248,7 +248,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
               </div>
               <div className="text-center">
                 <h2 className="text-[16px] font-bold tracking-tight">KAKAROT</h2>
-                <p className="text-[12px] text-zinc-500 mt-1 max-w-[280px] leading-relaxed">
+                <p className="text-[12px] text-zinc-500 mt-1 max-w-70 leading-relaxed">
                   Your AI assistant with full PC control. I can open apps, write code, create projects, manage files, send emails, and more.
                 </p>
               </div>
@@ -285,8 +285,8 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} msg-appear group/msg`}>
             <div className={`max-w-[90%] sm:max-w-[88%] ${msg.role === 'bot' ? 'flex gap-2 sm:gap-2.5 items-start' : ''}`}>
               {msg.role === 'bot' && (
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
-                  <Zap size={12} className="text-violet-400 sm:w-[13px] sm:h-[13px]" />
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-linear-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                  <Zap size={12} className="text-violet-400 sm:w-3.25 sm:h-3.25" />
                 </div>
               )}
               <div className="space-y-1.5">
@@ -310,7 +310,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
                   <>
                     <div className={`rounded-2xl ${
                       msg.role === 'user'
-                        ? 'bg-gradient-to-br from-violet-600 to-blue-600 text-white rounded-tr-sm px-3.5 py-2.5 sm:px-4 sm:py-2.5 shadow-lg shadow-violet-500/10'
+                        ? 'bg-linear-to-br from-violet-600 to-blue-600 text-white rounded-tr-sm px-3.5 py-2.5 sm:px-4 sm:py-2.5 shadow-lg shadow-violet-500/10'
                         : 'bg-zinc-900/90 border border-zinc-800/70 rounded-tl-sm'
                     }`}>
                       {msg.screenshot && (
@@ -323,7 +323,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
                           ? 'text-[13px] leading-relaxed'
                           : `px-3.5 py-3 text-zinc-300 ${msg.screenshot ? 'border-t border-zinc-800/60' : ''}`
                       }>
-                        {msg.role === 'bot' ? <FormattedText text={msg.text} /> : <span className="text-[13px] leading-relaxed whitespace-pre-wrap break-words">{msg.text}</span>}
+                        {msg.role === 'bot' ? <FormattedText text={msg.text} /> : <span className="text-[13px] leading-relaxed whitespace-pre-wrap wrap-break-word">{msg.text}</span>}
                       </div>
                     </div>
 
@@ -399,7 +399,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
         {loading && (
           <div className="flex justify-start msg-appear">
             <div className="flex gap-2.5 items-start">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/15 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-linear-to-br from-violet-500/20 to-blue-500/20 border border-violet-500/15 flex items-center justify-center shrink-0">
                 <Zap size={13} className="text-violet-400 animate-pulse" />
               </div>
               <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-2xl rounded-tl-sm px-4 py-3">
@@ -457,7 +457,7 @@ export default function ChatTab({ cmd, setCmd, messages, setMessages, loading, s
           <button
             type="submit"
             disabled={!cmd.trim()}
-            className="shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white flex items-center justify-center hover:from-violet-500 hover:to-blue-500 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:from-zinc-700 disabled:to-zinc-700 shadow-lg shadow-violet-500/20 touch-manipulation"
+            className="shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-linear-to-r from-violet-600 to-blue-600 text-white flex items-center justify-center hover:from-violet-500 hover:to-blue-500 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:from-zinc-700 disabled:to-zinc-700 shadow-lg shadow-violet-500/20 touch-manipulation"
             aria-label="Send message"
           >
             <ArrowUp size={18} strokeWidth={2.5} />
